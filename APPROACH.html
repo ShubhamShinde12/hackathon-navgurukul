@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LearnTrack — Solution Approach</title>
+  <style>
+    @media print {
+      body { font-size: 11pt; }
+      .page-break { page-break-before: always; }
+      pre { white-space: pre-wrap; word-wrap: break-word; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1e293b;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 48px;
+      background: #fff;
+    }
+    h1 { color: #312e81; font-size: 1.75rem; border-bottom: 3px solid #6366f1; padding-bottom: 8px; }
+    h2 { color: #4338ca; font-size: 1.25rem; margin-top: 2rem; }
+    h3 { color: #475569; font-size: 1.05rem; margin-top: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 600; }
+    pre, code {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+    }
+    pre { padding: 16px; overflow-x: auto; }
+    code { padding: 2px 6px; }
+    .meta { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; }
+    .meta p { margin: 4px 0; }
+    ul { padding-left: 1.5rem; }
+    li { margin: 4px 0; }
+    .highlight { background: #eef2ff; border-left: 4px solid #6366f1; padding: 12px 16px; margin: 1rem 0; }
+    .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 0.85rem; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <h1>LearnTrack — Solution Approach Document</h1>
+  <div class="meta">
+    <p><strong>NavGurukul Hackathon 2026</strong> | Challenge 4: Progressive Student Dashboard</p>
+    <p><strong>Author:</strong> [Your Name] &nbsp;|&nbsp; <strong>Role:</strong> Full-Stack Developer</p>
+    <p><strong>Repository:</strong> [Your GitHub URL] &nbsp;|&nbsp; <strong>Date:</strong> August 22, 2026</p>
+  </div>
+
+  <h2>1. Problem Statement</h2>
+  <p>Students need visibility into their learning progress — completed lessons, time invested, course-level breakdown, and guidance on what to study next. Mentors need a cohort-level view without manual tracking.</p>
+  <table>
+    <tr><th>Requirement</th><th>Our Implementation</th></tr>
+    <tr><td>Email auth + roles</td><td>JWT + bcrypt; Student &amp; Mentor roles</td></tr>
+    <tr><td>Progress dashboard</td><td>Summary API with stat cards &amp; progress bars</td></tr>
+    <tr><td>Trend chart</td><td>30-day activity time series (Recharts area chart)</td></tr>
+    <tr><td>Pie/donut charts</td><td>Completion by course + overall status</td></tr>
+    <tr><td>Backend API</td><td>REST endpoints for auth, aggregates, lessons, activity</td></tr>
+    <tr><td>Seed data</td><td>Prisma seed: 3 courses, 18 lessons, 30 days activity</td></tr>
+    <tr><td>Stretch goals</td><td>Recommendations, CSV export, mentor dashboard, responsive UI</td></tr>
+  </table>
+
+  <h2>2. System Architecture</h2>
+  <pre>
+┌──────────────────────────────────────────────┐
+│  FRONTEND — React + Vite + Tailwind + Recharts│
+│  Login │ Dashboard │ Courses │ Mentor View   │
+└────────────────────┬─────────────────────────┘
+                     │ HTTP/JSON + JWT Bearer
+                     ▼
+┌──────────────────────────────────────────────┐
+│  BACKEND — Express + TypeScript + Prisma      │
+│  Auth │ Dashboard │ Courses │ Lessons │ Mentor│
+└────────────────────┬─────────────────────────┘
+                     │ Prisma ORM
+                     ▼
+┌──────────────────────────────────────────────┐
+│  DATABASE — SQLite                            │
+│  User │ Course │ Lesson │ Completion │ Activity│
+└──────────────────────────────────────────────┘
+  </pre>
+
+  <h3>Technology Stack</h3>
+  <table>
+    <tr><th>Layer</th><th>Tech</th><th>Why</th></tr>
+    <tr><td>Frontend</td><td>React 18, Vite, TypeScript, Tailwind</td><td>Fast dev, component UI, responsive design</td></tr>
+    <tr><td>Charts</td><td>Recharts</td><td>React-native; area + pie charts easily</td></tr>
+    <tr><td>Backend</td><td>Express + TypeScript</td><td>Lightweight REST; type-safe server code</td></tr>
+    <tr><td>Database</td><td>SQLite via Prisma</td><td>Zero setup; perfect for local demo</td></tr>
+    <tr><td>Auth</td><td>JWT + bcrypt</td><td>Stateless; no session store needed</td></tr>
+  </table>
+
+  <div class="page-break"></div>
+
+  <h2>3. Data Model</h2>
+  <pre>
+User ──&lt; LessonCompletion &gt;── Lesson ──&lt; Course
+  │
+  └──&lt; ActivityEvent &gt;── Lesson (optional)
+  </pre>
+
+  <table>
+    <tr><th>Model</th><th>Purpose</th><th>Key Fields</th></tr>
+    <tr><td>User</td><td>Auth accounts</td><td>email, password (hash), role (STUDENT/MENTOR)</td></tr>
+    <tr><td>Course</td><td>Learning program</td><td>title, description, category</td></tr>
+    <tr><td>Lesson</td><td>Learning unit</td><td>title, durationMin, order, courseId</td></tr>
+    <tr><td>LessonCompletion</td><td>Completion milestone</td><td>userId, lessonId, completedAt (unique per user+lesson)</td></tr>
+    <tr><td>ActivityEvent</td><td>Time tracking</td><td>userId, minutes, date, type (LESSON/PRACTICE/REVIEW)</td></tr>
+  </table>
+
+  <div class="highlight">
+    <strong>Key design decision:</strong> Completions (binary milestones) are separated from ActivityEvents (continuous time tracking). A student can spend time on a lesson without completing it.
+  </div>
+
+  <h2>4. API Design</h2>
+  <table>
+    <tr><th>Endpoint</th><th>Purpose</th></tr>
+    <tr><td>POST /api/auth/login</td><td>Authenticate &amp; receive JWT</td></tr>
+    <tr><td>GET /api/dashboard/summary</td><td>Stats, course progress, recent completions</td></tr>
+    <tr><td>GET /api/dashboard/timeseries</td><td>Daily minutes for trend chart</td></tr>
+    <tr><td>GET /api/dashboard/distribution</td><td>Pie chart data by course &amp; status</td></tr>
+    <tr><td>GET /api/dashboard/recommendations</td><td>Next uncompleted lesson per course</td></tr>
+    <tr><td>GET /api/courses, /api/courses/:id</td><td>Course list &amp; detail with progress</td></tr>
+    <tr><td>POST /api/lessons/:id/complete</td><td>Mark lesson done + log activity</td></tr>
+    <tr><td>GET /api/mentor/students</td><td>All students' progress (mentor only)</td></tr>
+    <tr><td>GET /api/export/progress</td><td>CSV download</td></tr>
+  </table>
+
+  <h3>Recommendation Algorithm</h3>
+  <p>Rule-based (no ML): For each course, find the first lesson (by order) not yet completed. Return up to 3 suggestions with contextual reason strings. Simple, deterministic, and explainable.</p>
+
+  <div class="page-break"></div>
+
+  <h2>5. Why This Solution Works</h2>
+  <ul>
+    <li><strong>Complete MVP in scope</strong> — All core + stretch features implemented and demo-ready in ~5 minutes</li>
+    <li><strong>2-minute setup</strong> — <code>npm install</code> + <code>npm run db:setup</code>; no Docker or external services</li>
+    <li><strong>Clean architecture</strong> — Frontend (UI) → Backend (logic) → Database (truth); easy to explain to judges</li>
+    <li><strong>Extensible schema</strong> — Swap SQLite → PostgreSQL; add enrollments, quizzes, ML recommendations later</li>
+    <li><strong>100% open source</strong> — No API keys or paid services; runs fully offline</li>
+    <li><strong>Role-based access</strong> — Students and mentors see different views from the same codebase</li>
+  </ul>
+
+  <h2>6. Drawbacks &amp; Limitations</h2>
+  <table>
+    <tr><th>Limitation</th><th>Impact</th><th>Future Fix</th></tr>
+    <tr><td>SQLite</td><td>Poor concurrent writes at scale</td><td>Migrate to PostgreSQL</td></tr>
+    <tr><td>JWT in localStorage</td><td>XSS vulnerability</td><td>HTTP-only cookies + refresh tokens</td></tr>
+    <tr><td>Rule-based recommendations</td><td>Not truly adaptive</td><td>ML scoring by performance &amp; spaced repetition</td></tr>
+    <tr><td>No real-time sync</td><td>Mentor must refresh to see updates</td><td>WebSockets or SSE</td></tr>
+    <tr><td>Simulated time tracking</td><td>Seed data is random; complete logs expected duration</td><td>Session timer or video watch-time API</td></tr>
+    <tr><td>No automated tests</td><td>Regression risk</td><td>Vitest unit tests + Playwright E2E</td></tr>
+    <tr><td>Single-tenant</td><td>No cohorts or org structure</td><td>Add Enrollment &amp; Cohort models</td></tr>
+  </table>
+
+  <h2>7. Demo Instructions</h2>
+  <pre>
+# Backend:  cd backend && npm install && npm run db:setup && npm run dev
+# Frontend: cd frontend && npm install && npm run dev
+# Open:     http://localhost:5173
+
+Student:  student@demo.com  / password123
+Mentor:   mentor@demo.com   / password123
+  </pre>
+  <p><strong>Demo flow:</strong> Login as student → dashboard stats &amp; charts → open course → mark lesson complete → export CSV → logout → login as mentor → student overview.</p>
+
+  <h2>8. Conclusion</h2>
+  <p>LearnTrack prioritizes <strong>clarity over complexity</strong> — a working, locally runnable dashboard that maps directly to Challenge 4 requirements. The trade-off is production readiness vs. hackathon delivery speed, which is the right balance for a timed proof-of-concept with a clear path to production.</p>
+
+  <div class="footer">
+    LearnTrack — NavGurukul Hackathon 2026 — Challenge 4: Progressive Student Dashboard
+  </div>
+
+</body>
+</html>

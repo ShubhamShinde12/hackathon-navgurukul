@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  MENTOR
+}
+
+enum ActivityType {
+  LESSON
+  PRACTICE
+  REVIEW
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+
+  completions LessonCompletion[]
+  activities  ActivityEvent[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   @default("General")
+  createdAt   DateTime @default(now())
+
+  lessons Lesson[]
+}
+
+model Lesson {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  durationMin Int
+  order       Int
+  courseId    String
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  completions LessonCompletion[]
+  activities  ActivityEvent[]
+}
+
+model LessonCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model ActivityEvent {
+  id       String       @id @default(cuid())
+  userId   String
+  lessonId String?
+  minutes  Int
+  date     DateTime
+  type     ActivityType @default(LESSON)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+}
