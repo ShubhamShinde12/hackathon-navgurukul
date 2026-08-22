@@ -13,6 +13,16 @@ Full-stack web application for **NavGurukul Hackathon Challenge 4**. Tracks stud
 - CSV export of learning progress
 - Seeded demo data for instant demo
 
+
+<img width="956" height="473" alt="image" src="https://github.com/user-attachments/assets/988550f7-b144-4b8e-b509-8285b10805b3" />
+
+<img width="957" height="477" alt="image" src="https://github.com/user-attachments/assets/066b69ef-4d00-473c-a5db-6544e6950399" />
+
+<img width="959" height="467" alt="image" src="https://github.com/user-attachments/assets/0d2a8805-72ea-487f-a392-0e27166bb258" />
+
+<img width="958" height="476" alt="image" src="https://github.com/user-attachments/assets/36208b1c-b0b5-4a82-985f-76e155c3e9aa" />
+
+
 ## Tech Stack
 
 | Layer | Technology |
